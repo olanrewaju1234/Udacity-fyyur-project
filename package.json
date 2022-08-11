@@ -1,0 +1,23 @@
+{
+  "name": "cd0046-sql-and-data-modeling-for-the-web",
+  "version": "1.0.0",
+  "description": "Fyyur\r -----",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olanrewaju1234/udacity-fyyur-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/olanrewaju1234/udacity-fyyur-project/issues"
+  },
+  "homepage": "https://github.com/olanrewaju1234/udacity-fyyur-project#readme",
+  "dependencies": {
+    "bootstrap": "^3.4.1"
+  }
+}
