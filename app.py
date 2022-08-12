@@ -15,6 +15,8 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from models import db, Artist, Venue, Show
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -22,72 +24,11 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 
 # TODO: connect to a local postgresql database
-# 
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
 
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    website = db.Column(db.String(120))
-    facebook_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean)
-    description = db.Column(db.String(500))
-    artists = db.relationship('Artist', secondary='shows')
-    shows = db.relationship('Show', backref=('Venue'))
-
-    def __repr__(self):
-        return f'<Venue {self.id} {self.name}>'
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    website = db.Column(db.String(120))
-    facebook_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean)
-    description = db.Column(db.String(120))
-    venues = db.relationship('Venue', secondary='shows')
-    shows = db.relationship('Show', backref=('Artist'))
-
-    def __repr__(self):
-        return f'<Artist {self.id} {self.name}>'
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-
-
-class Show(db.Model):
-    __tablename__ = 'shows'
-    id = db.Column(db.Integer, primary_key=True)
-    artist_id = db.Column(db.Integer, db.ForeignKey(
-        'Artist.id'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey(
-        'Venue.id'), nullable=False)
-    start_time = db.Column(db.DateTime, nullable=False)
-
-    venue = db.relationship('Venue')
-    artist = db.relationship('Artist')
 
 
 #----------------------------------------------------------------------------#
@@ -171,6 +112,7 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
     venue = Venue.query.get(venue_id)
+    setattr(venue, "genres", venue.genres.split(",")) # convert genre string back to array
     
     #view past shows
     past_shows = list(filter(lambda show: show.start_time < datetime.now(), venue.shows))
@@ -191,9 +133,9 @@ def show_venue(venue_id):
     value_shows = []
     for show in upcoming_shows:
         value = {}
-        value["artist_name"] = show.artists.name
-        value["artist_id"] = show.artists.id
-        value["artist_image_link"] = show.artists.image_link
+        value["artist_name"] = show.artist.name
+        value["artist_id"] = show.artist.id
+        value["artist_image_link"] = show.artist.image_link
         value["start_time"] = show.start_time.strftime("%m/%d/%Y, %H:%M:%S")
         value_shows.append(value)
 
@@ -225,7 +167,7 @@ def create_venue_submission():
       phone = request.form['phone'],
       image_link = request.form['image_link'],
       facebook_link = request.form['facebook_link'],
-      genres = request.form['genres'],
+      genres = ','.join(request.form.getlist('genres')),
       website = request.form['website_link'],
       seeking_talent = bool(request.form.getlist('seeking_talent')),
       description = request.form['seeking_description']
@@ -298,6 +240,7 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     artist = Artist.query.get(artist_id)
+    setattr(artist, "genres", artist.genres.split(",")) # convert genre string back to array
     # view past shows
     past_shows = list(filter(lambda show: show.start_time < datetime.now(), artist.shows))
     value_shows = []
@@ -337,6 +280,7 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
   form = ArtistForm()
   artist = Artist.query.get(artist_id)
+  form.genres.data = artist.genres.split(",") # convert genre string back to array
   # TODO: populate form with fields from artist with ID <artist_id>
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
@@ -353,7 +297,7 @@ def edit_artist_submission(artist_id):
     artist.phone = request.form['phone'],
     artist.image_link = request.form['image_link'],
     artist.facebook_link = request.form['facebook_link'],
-    artist.genres = request.form['genres'],
+    artist.genres = ','.join(request.form.getlist('genres'))
     artist.website = request.form['website_link'],
     artist.seeking_venue = bool(request.form['seeking_venue'])
     artist.description = request.form['seeking_description']
@@ -374,6 +318,7 @@ def edit_artist_submission(artist_id):
 def edit_venue(venue_id):
   form = VenueForm()
   venue = Venue.query.get(venue_id)
+  form.genres.data = venue.genres.split(",") # convert genre string back to array
   # TODO: populate form with values from venue with ID <venue_id>
   return render_template('forms/edit_venue.html', form=form, venue=venue)
 
@@ -391,7 +336,7 @@ def edit_venue_submission(venue_id):
     venue.phone = request.form['phone'],
     venue.image_link = request.form['image_link'],
     venue.facebook_link = request.form['facebook_link'],
-    venue.genres = request.form['genres'],
+    venue.genres = ','.join(request.form.getlist('genres')),
     venue.website = request.form['website_link'],
     venue.seeking_talent = bool(request.form['seeking_talent'])
     venue.description = request.form['seeking_description']
@@ -430,7 +375,7 @@ def create_artist_submission():
       phone = request.form['phone'],
       image_link = request.form['image_link'],
       facebook_link = request.form['facebook_link'],
-      genres = request.form['genres'],
+      genres = ','.join(request.form.getlist('genres')),
       website = request.form['website_link'],
       seeking_venue = bool(request.form.getlist('seeking_venue')),
       description = request.form['seeking_description']
