@@ -389,7 +389,7 @@ def create_artist_submission():
     db.session.rollback()
     print(sys.exc_info())
     # TODO: on unsuccessful db insert, flash an error instead.
-    flash('An error occurred. Venue' + request.form['name'] + ' could not be listed.')
+    flash('An error occurred. Artist' + request.form['name'] + ' could not be listed.')
   finally:
     db.session.close()       
   return render_template('pages/home.html')

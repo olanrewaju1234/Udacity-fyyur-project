@@ -1,5 +1,7 @@
 from datetime import datetime
+from xml.dom import ValidationErr
 from flask_wtf import Form
+import phonenumbers
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, AnyOf, URL
 
@@ -85,6 +87,9 @@ class VenueForm(Form):
     phone = StringField(
         'phone'
     )
+    def validate_phone(form, phone):
+        if len(phone.data) < 12 or len(phone.data) > 12:
+            raise ValidationErr('We are sorry, you must enter 12 characters such as 123-123-1234')
     image_link = StringField(
         'image_link'
     )
@@ -195,6 +200,9 @@ class ArtistForm(Form):
         # TODO implement validation logic for state
         'phone'
     )
+    def validate_phone(form, phone):
+        if len(phone.data) < 12 or len(phone.data) > 12:
+            raise ValidationErr('We are sorry, you must enter 12 characters such as 123-123-1234')
     image_link = StringField(
         'image_link'
     )

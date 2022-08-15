@@ -27,26 +27,6 @@ class Venue(db.Model):
     shows = db.relationship('Show', backref=('Venue'))
 
 
-    def isvalid(num):
-        phone=re.compile
-
-    def to_dict(self):
-        """ Returns a dictinary of venues """
-        return {
-            'id': self.id,
-            'name': self.name,
-            'city': self.city,
-            'state': self.state,
-            'address': self.address,
-            'phone': self.phone,
-            'genres': self.genres.split(','),  # convert string to list
-            'image_link': self.image_link,
-            'facebook_link': self.facebook_link,
-            'website': self.website,
-            'seeking_talent': self.seeking_talent,
-            'description': self.seeking_description,
-        }
-
     def __repr__(self):
         return f'<Venue {self.id} {self.name}>'
 
@@ -68,21 +48,6 @@ class Artist(db.Model):
     venues = db.relationship('Venue', secondary='shows')
     shows = db.relationship('Show', backref=('Artist'))
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'city': self.city,
-            'state': self.state,
-            'phone': self.phone,
-            'genres': self.genres.split(','),  # convert string to list
-            'image_link': self.image_link,
-            'facebook_link': self.facebook_link,
-            'website': self.website,
-            'seeking_venue': self.seeking_venue,
-            'description': self.seeking_description,
-        }
-
     def __repr__(self):
         return f'<Artist {self.id} {self.name}>'
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
@@ -101,23 +66,3 @@ class Show(db.Model):
 
     venue = db.relationship('Venue')
     artist = db.relationship('Artist')
-
-    def show_artist(self):
-        """ Returns a dictinary of artists for the show """
-        return {
-            'artist_id': self.artist_id,
-            'artist_name': self.artist.name,
-            'artist_image_link': self.artist.image_link,
-            # convert datetime to string
-            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-    def show_venue(self):
-        """ Returns a dictinary of venues for the show """
-        return {
-            'venue_id': self.venue_id,
-            'venue_name': self.venue.name,
-            'venue_image_link': self.venue.image_link,
-            # convert datetime to string
-            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S')
-        }
